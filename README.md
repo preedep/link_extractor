@@ -21,3 +21,7 @@ Example:
 ```bash
 RUST_LOG=info ./target/debug/link_extractor -u https://www.rust-lang.org
 ```
+Output:
+
+![alt text](./imgs/example.png "Example")
+
