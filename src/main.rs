@@ -71,7 +71,6 @@ async fn print_links(url: &String, client: &Client, doc: &Document) {
             if !x.is_empty() {
                 let future = async move {
                     let full_url = format!("{}{}", url, x);
-                    //info!("Image: {}", &full_url);
                     let resp = client.get(&full_url).send().await;
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
