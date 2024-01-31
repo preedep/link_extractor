@@ -1,9 +1,10 @@
+use std::future::Future;
 use std::io::Error;
 
 use clap::Parser;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use log::{debug, info};
+use log::{debug, error, info};
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::Name;
@@ -52,32 +53,37 @@ async fn extract_all_link(url: &String, client: &Client) {
             .map_err(|e| Error::new(std::io::ErrorKind::Other, e));
         match body {
             Ok(text) => {
-                let mut futures = FuturesUnordered::new();
-                Document::from(text.as_str())
-                    .find(Name("img"))
-                    .filter_map(|n| n.attr("src"))
-                    .for_each(|x| {
-                        if !x.is_empty() {
-                            let future = async move {
-                                let full_url = format!("{}{}", url, x);
-                                info!("Image: {}", &full_url);
-                                let resp = client.get(&full_url).send().await;
-                                if let Ok(resp) = resp {
-                                    if resp.status().is_success() {
-                                        info!("Success: {}", &full_url);
-                                    } else {
-                                        info!("Error: {}", &full_url);
-                                    }
-                                }
-                            };
-                            futures.push(future);
-                        }
-                    });
-                while let Some(_) = futures.next().await {}
+                let doc = Document::from(text.as_str());
+                print_links(url, client,  &doc).await;
             }
             Err(e) => {
                 panic!("Error: {}", e);
             }
         }
     }
+}
+
+async fn print_links(url: &String, client: &Client, doc: &Document) {
+    let mut futures = FuturesUnordered::new();
+    doc.find(Name("img"))
+        .filter_map(|n| n.attr("src"))
+        .for_each(|x| {
+            if !x.is_empty() {
+                let future = async move {
+                    let full_url = format!("{}{}", url, x);
+                    //info!("Image: {}", &full_url);
+                    let resp = client.get(&full_url).send().await;
+                    if let Ok(resp) = resp {
+                        if resp.status().is_success() {
+                            info!("Success: {}", &full_url);
+                        } else {
+                            error!("Error: {}", &full_url);
+                        }
+                    }
+                };
+                futures.push(future);
+            }
+        });
+
+    while let Some(_) = futures.next().await {}
 }
