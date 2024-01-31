@@ -18,6 +18,12 @@ struct Cli {
     ///Your proxy url
     #[arg(short, long)]
     pub proxy: Option<String>,
+    ///Html Tag , default is img
+    #[arg(short, long, default_value = "img")]
+    pub tag: Option<String>,
+    ///Attribute name of Tag , default is src
+    #[arg(short, long, default_value = "src")]
+    pub attr: Option<String>,
 }
 
 #[tokio::main]
