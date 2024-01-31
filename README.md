@@ -12,6 +12,8 @@ Usage: link_extractor [OPTIONS] --url <URL>
 Options:
   -u, --url <URL>      Your web site url
   -p, --proxy <PROXY>  Your proxy url
+  -t, --tag <TAG>      Html Tag , default is img [default: img]
+  -a, --attr <ATTR>    Attribute name of Tag , default is src [default: src]
   -h, --help           Print help
   -V, --version        Print version
 ```

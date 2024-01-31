@@ -32,21 +32,27 @@ async fn main() -> Result<(), Error> {
 
     let cli = Cli::parse();
     let url = cli.url;
+    let tag = cli.tag.unwrap_or("img".to_string());
+    let attr = cli.attr.unwrap_or("src".to_string());
+
     info!("open url: {}", &url);
     let client = Client::builder();
     if let Some(proxy) = cli.proxy.as_deref() {
         info!("with proxy: {}", proxy);
         let proxy = reqwest::Proxy::all(proxy).unwrap();
         let client = client.proxy(proxy).build().expect("TODO: panic message");
-        extract_all_link(&url, &client).await;
+        extract_all_link(&url, &tag,&attr, &client).await;
     } else {
         let client = client.build().expect("TODO: panic message");
-        extract_all_link(&url, &client).await;
+        extract_all_link(&url, &tag,&attr, &client).await;
     }
     Ok(())
 }
 
-async fn extract_all_link(url: &String, client: &Client) {
+async fn extract_all_link(url: &String,
+                          tag: &String,
+                          attr: &String,
+                          client: &Client) {
     debug!("extract_all_link: {}", url);
 
     let resp =
@@ -60,7 +66,11 @@ async fn extract_all_link(url: &String, client: &Client) {
         match body {
             Ok(text) => {
                 let doc = Document::from(text.as_str());
-                print_links(url, client, &doc).await;
+                print_links(url,
+                            tag,
+                            attr,
+                            client,
+                            &doc).await;
             }
             Err(e) => {
                 panic!("Error: {}", e);
@@ -69,10 +79,13 @@ async fn extract_all_link(url: &String, client: &Client) {
     }
 }
 
-async fn print_links(url: &String, client: &Client, doc: &Document) {
+async fn print_links(url: &String,
+                     tag: &String,
+                        attr: &String,
+                     client: &Client, doc: &Document) {
     let mut futures = FuturesUnordered::new();
-    doc.find(Name("img"))
-        .filter_map(|n| n.attr("src"))
+    doc.find(Name(tag.as_str()))
+        .filter_map(|n| n.attr(attr.as_str()))
         .for_each(|x| {
             if !x.is_empty() {
                 let future = async move {
