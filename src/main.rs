@@ -7,6 +7,7 @@ use log::{debug, error, info};
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::Name;
+use url::Url;
 
 /// Cli (Command Line Interface) for extracting link from yours web site.
 #[derive(Parser, Debug)]
@@ -93,7 +94,10 @@ async fn print_links(url: &String,
                     let resp = client.get(&full_url).send().await;
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
-                            info!("Success: {}", &full_url);
+                            //info!("Success: {}", &full_url);
+                            let url_info = Url::parse(&full_url).unwrap();
+                            info!("Path : {}", url_info.path());
+
                             resp.headers().iter().for_each(|(k, v)| {
                                 debug!("{}: {:?}", k, v);
                             });
