@@ -1,4 +1,3 @@
-use std::future::Future;
 use std::io::Error;
 
 use clap::Parser;
@@ -8,6 +7,7 @@ use log::{debug, error, info};
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::Name;
+
 /// Cli (Command Line Interface) for extracting link from yours web site.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -54,7 +54,7 @@ async fn extract_all_link(url: &String, client: &Client) {
         match body {
             Ok(text) => {
                 let doc = Document::from(text.as_str());
-                print_links(url, client,  &doc).await;
+                print_links(url, client, &doc).await;
             }
             Err(e) => {
                 panic!("Error: {}", e);
