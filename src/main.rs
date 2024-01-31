@@ -24,11 +24,10 @@ async fn main() -> Result<(), Error> {
 
     let cli = Cli::parse();
     let url = cli.url;
-    debug!("url: {}", &url);
-
+    info!("open url: {}", &url);
     let client = Client::builder();
     if let Some(proxy) = cli.proxy.as_deref() {
-        info!("connect with proxy: {}", proxy);
+        info!("with proxy: {}", proxy);
         let proxy = reqwest::Proxy::all(proxy).unwrap();
         let client = client.proxy(proxy).build().expect("TODO: panic message");
         extract_all_link(&url, &client).await;
