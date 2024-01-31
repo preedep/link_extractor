@@ -75,6 +75,9 @@ async fn print_links(url: &String, client: &Client, doc: &Document) {
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
                             info!("Success: {}", &full_url);
+                            resp.headers().iter().for_each(|(k, v)| {
+                                debug!("{}: {:?}", k, v);
+                            });
                         } else {
                             error!("Error: {}", &full_url);
                         }
