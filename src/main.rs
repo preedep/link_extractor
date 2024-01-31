@@ -1,11 +1,12 @@
 use std::io::Error;
 
 use clap::Parser;
+use futures::stream::FuturesUnordered;
+use futures::StreamExt;
 use log::{debug, info};
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::Name;
-
 /// Cli (Command Line Interface) for extracting link from yours web site.
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -51,14 +52,28 @@ async fn extract_all_link(url: &String, client: &Client) {
             .map_err(|e| Error::new(std::io::ErrorKind::Other, e));
         match body {
             Ok(text) => {
+                let mut futures = FuturesUnordered::new();
                 Document::from(text.as_str())
                     .find(Name("img"))
                     .filter_map(|n| n.attr("src"))
                     .for_each(|x| {
                         if !x.is_empty() {
-                            info!("Link: {}", format!("{}{}", url, x));
+                            let future = async move {
+                                let full_url = format!("{}{}", url, x);
+                                info!("Image: {}", &full_url);
+                                let resp = client.get(&full_url).send().await;
+                                if let Ok(resp) = resp {
+                                    if resp.status().is_success() {
+                                        info!("Success: {}", &full_url);
+                                    } else {
+                                        info!("Error: {}", &full_url);
+                                    }
+                                }
+                            };
+                            futures.push(future);
                         }
                     });
+                while let Some(_) = futures.next().await {}
             }
             Err(e) => {
                 panic!("Error: {}", e);
