@@ -105,7 +105,22 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                             let cache_info = resp.headers().get("x-iinfo");
                             let content_type = resp.headers().get("content-type");
                             if let Some(cache_info) = cache_info {
-                                info!("x-iinfo: {}", cache_info.to_str().unwrap());
+                                let cache_status = cache_info.to_str().unwrap().chars().nth(9).unwrap();
+                                match cache_status {
+                                    'C' => {
+                                        debug!("cache_status: {} : {}", cache_status,"The resource is served from cache");
+                                    }
+                                    'V' => {
+                                        debug!("cache_status: {} : {}", cache_status,"The resource passed validation and is fresh.");
+                                    }
+                                    'N' => {
+                                        debug!("cache_status: {} : {}", cache_status,"The resource is not served from cache and was fetched directly from the backend.");
+                                    }
+                                    _ => {
+                                        debug!("cache_status: {}", cache_status);
+                                    }
+                                }
+                                info!("x-iinfo: {}", cache_status.to_str().unwrap());
                             }
                             if let Some(content_type) = content_type {
                                 info!("content-type: {}", content_type.to_str().unwrap());
