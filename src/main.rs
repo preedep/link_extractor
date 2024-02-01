@@ -1,8 +1,11 @@
 use std::io::Error;
+use std::time::Instant;
 
 use clap::Parser;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use indicatif_log_bridge::LogWrapper;
 use log::{debug, error, info};
 use reqwest::Client;
 use select::document::Document;
@@ -29,6 +32,14 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    /*
+    let logger = pretty_env_logger::formatted_builder().build();
+    let multi = MultiProgress::new();
+
+    LogWrapper::new(multi.clone(), logger)
+        .try_init()
+        .unwrap();
+    */
     pretty_env_logger::init();
 
     let cli = Cli::parse();
@@ -54,7 +65,7 @@ async fn extract_all_link(url: &String,
                           tag: &String,
                           attr: &String,
                           client: &Client) {
-    debug!("extract_all_link: {}", url);
+    //debug!("extract_all_link: {}", url);
 
     let resp =
         client.get(url).header("User-Agent",
@@ -90,21 +101,31 @@ async fn print_links(url: &String,
         .for_each(|x| {
             if !x.is_empty() {
                 let future = async move {
+                    /*
+                    let pb = ProgressBar::new_spinner();
+                    pb.set_style(ProgressStyle::default_spinner()
+                        .template("{spinner:.green} [{elapsed_precise}] {msg}").unwrap());
+                    pb.set_message("Fetching URL...");
+                    */
                     let full_url = format!("{}{}", url, x);
+                    let start = Instant::now();
                     let resp = client.get(&full_url).send().await;
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
-                            //info!("Success: {}", &full_url);
-                            let url_info = Url::parse(&full_url).unwrap();
-                            info!("Path : {}", url_info.path());
-
+                            info!("Success: {}", &full_url);
+                            //let url_info = Url::parse(&full_url).unwrap();
+                            //info!("Path : {}", url_info.path());
                             resp.headers().iter().for_each(|(k, v)| {
                                 debug!("{}: {:?}", k, v);
                             });
                         } else {
                             error!("Error: {}", &full_url);
                         }
+                        let elapsed = start.elapsed();
+                        let message = format!("Download use Elapsed time: {:.2?}", elapsed);
+                        info!("{}", message);
                     }
+                    //pb.finish_with_message("Done");
                 };
                 futures.push(future);
             }
