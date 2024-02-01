@@ -46,7 +46,7 @@ async fn main() -> Result<(), Error> {
     let attr = cli.attr.unwrap_or("src".to_string());
 
     info!("open url: {}", &url);
-    let client = Client::builder();
+    let client = Client::builder().use_rustls_tls();
     if let Some(proxy) = cli.proxy.as_deref() {
         info!("with proxy: {}", proxy);
         let proxy = reqwest::Proxy::all(proxy).unwrap();
@@ -64,7 +64,9 @@ async fn extract_all_link(url: &String, tag: &String, attr: &String, client: &Cl
 
     let resp =
         client.get(url).header("User-Agent",
-                               "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15").send().await;
+                               "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15")
+            .header("Accept","application/vnd.npm.install-v1+json; q=1.0, application/json; q=0.8, */*")
+            .header("Content-Encoding","gzip").send().await;
     if let Ok(resp) = resp {
         let body = resp
             .text()
@@ -89,7 +91,6 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
         .for_each(|x| {
             if !x.is_empty() {
                 let future = async move {
-
                     let full_url = format!("{}", url);
                     let url_info = Url::parse(&full_url).unwrap();
                     let resource_url = format!("{}://{}{}",
@@ -101,19 +102,21 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
                             info!("Success: {}", &resource_url);
-
                             let cache_info = resp.headers().get("x-iinfo");
+                            let content_type = resp.headers().get("content-type");
                             if let Some(cache_info) = cache_info {
                                 info!("x-iinfo: {}", cache_info.to_str().unwrap());
+                            }
+                            if let Some(content_type) = content_type {
+                                info!("content-type: {}", content_type.to_str().unwrap());
                             }
                         } else {
                             error!("Error: {}", &full_url);
                         }
                         let elapsed = start.elapsed();
-                        let message = format!("Download use Elapsed time: {:.2?}", elapsed);
+                        let message = format!("Download use Elapsed time: {:.2?}\n=====", elapsed);
                         info!("{}", message);
                     }
-
                 };
                 futures.push(future);
             }
