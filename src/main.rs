@@ -8,6 +8,7 @@ use log::{debug, error, info};
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::Name;
+use url::Url;
 
 /// Cli (Command Line Interface) for extracting link from yours web site.
 #[derive(Parser, Debug)]
@@ -88,23 +89,23 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
         .for_each(|x| {
             if !x.is_empty() {
                 let future = async move {
-                    /*
-                    let pb = ProgressBar::new_spinner();
-                    pb.set_style(ProgressStyle::default_spinner()
-                        .template("{spinner:.green} [{elapsed_precise}] {msg}").unwrap());
-                    pb.set_message("Fetching URL...");
-                    */
-                    let full_url = format!("{}{}", url, x);
+
+                    let full_url = format!("{}", url);
+                    let url_info = Url::parse(&full_url).unwrap();
+                    let resource_url = format!("{}://{}{}",
+                                               url_info.scheme(),
+                                               url_info.host_str().unwrap(),
+                                               x);
                     let start = Instant::now();
-                    let resp = client.get(&full_url).send().await;
+                    let resp = client.get(&resource_url).send().await;
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
-                            info!("Success: {}", &full_url);
-                            //let url_info = Url::parse(&full_url).unwrap();
-                            //info!("Path : {}", url_info.path());
-                            resp.headers().iter().for_each(|(k, v)| {
-                                debug!("{}: {:?}", k, v);
-                            });
+                            info!("Success: {}", &resource_url);
+
+                            let cache_info = resp.headers().get("x-iinfo");
+                            if let Some(cache_info) = cache_info {
+                                info!("x-iinfo: {}", cache_info.to_str().unwrap());
+                            }
                         } else {
                             error!("Error: {}", &full_url);
                         }
@@ -112,7 +113,7 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                         let message = format!("Download use Elapsed time: {:.2?}", elapsed);
                         info!("{}", message);
                     }
-                    //pb.finish_with_message("Done");
+
                 };
                 futures.push(future);
             }
