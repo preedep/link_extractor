@@ -4,13 +4,10 @@ use std::time::Instant;
 use clap::Parser;
 use futures::stream::FuturesUnordered;
 use futures::StreamExt;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use indicatif_log_bridge::LogWrapper;
 use log::{debug, error, info};
 use reqwest::Client;
 use select::document::Document;
 use select::predicate::Name;
-use url::Url;
 
 /// Cli (Command Line Interface) for extracting link from yours web site.
 #[derive(Parser, Debug)]
@@ -53,18 +50,15 @@ async fn main() -> Result<(), Error> {
         info!("with proxy: {}", proxy);
         let proxy = reqwest::Proxy::all(proxy).unwrap();
         let client = client.proxy(proxy).build().expect("TODO: panic message");
-        extract_all_link(&url, &tag,&attr, &client).await;
+        extract_all_link(&url, &tag, &attr, &client).await;
     } else {
         let client = client.build().expect("TODO: panic message");
-        extract_all_link(&url, &tag,&attr, &client).await;
+        extract_all_link(&url, &tag, &attr, &client).await;
     }
     Ok(())
 }
 
-async fn extract_all_link(url: &String,
-                          tag: &String,
-                          attr: &String,
-                          client: &Client) {
+async fn extract_all_link(url: &String, tag: &String, attr: &String, client: &Client) {
     //debug!("extract_all_link: {}", url);
 
     let resp =
@@ -78,11 +72,7 @@ async fn extract_all_link(url: &String,
         match body {
             Ok(text) => {
                 let doc = Document::from(text.as_str());
-                print_links(url,
-                            tag,
-                            attr,
-                            client,
-                            &doc).await;
+                print_links(url, tag, attr, client, &doc).await;
             }
             Err(e) => {
                 panic!("Error: {}", e);
@@ -91,10 +81,7 @@ async fn extract_all_link(url: &String,
     }
 }
 
-async fn print_links(url: &String,
-                     tag: &String,
-                        attr: &String,
-                     client: &Client, doc: &Document) {
+async fn print_links(url: &String, tag: &String, attr: &String, client: &Client, doc: &Document) {
     let mut futures = FuturesUnordered::new();
     doc.find(Name(tag.as_str()))
         .filter_map(|n| n.attr(attr.as_str()))
