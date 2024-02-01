@@ -120,7 +120,6 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                                         debug!("cache_status: {}", cache_status);
                                     }
                                 }
-                                info!("x-iinfo: {}", cache_status.to_str().unwrap());
                             }
                             if let Some(content_type) = content_type {
                                 info!("content-type: {}", content_type.to_str().unwrap());
