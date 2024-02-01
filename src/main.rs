@@ -89,12 +89,7 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
         .for_each(|x| {
             if !x.is_empty() {
                 let future = async move {
-                    /*
-                    let pb = ProgressBar::new_spinner();
-                    pb.set_style(ProgressStyle::default_spinner()
-                        .template("{spinner:.green} [{elapsed_precise}] {msg}").unwrap());
-                    pb.set_message("Fetching URL...");
-                    */
+
                     let full_url = format!("{}", url);
                     let url_info = Url::parse(&full_url).unwrap();
                     let resource_url = format!("{}://{}{}",
@@ -106,8 +101,7 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                     if let Ok(resp) = resp {
                         if resp.status().is_success() {
                             info!("Success: {}", &resource_url);
-                            //let url_info = Url::parse(&full_url).unwrap();
-                            //info!("Path : {}", url_info.path());
+
                             let cache_info = resp.headers().get("x-iinfo");
                             if let Some(cache_info) = cache_info {
                                 info!("x-iinfo: {}", cache_info.to_str().unwrap());
@@ -119,7 +113,7 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                         let message = format!("Download use Elapsed time: {:.2?}", elapsed);
                         info!("{}", message);
                     }
-                    //pb.finish_with_message("Done");
+
                 };
                 futures.push(future);
             }
