@@ -155,10 +155,12 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                 let future = async move {
                     let full_url = format!("{}", url);
                     let url_info = Url::parse(&full_url).unwrap();
-                    let resource_url = format!("{}://{}{}",
-                                               url_info.scheme(),
-                                               url_info.host_str().unwrap(),
-                                               x);
+                    let resource_url = format!(
+                        "{}://{}{}",
+                        url_info.scheme(),
+                        url_info.host_str().unwrap(),
+                        x
+                    );
                     let start = Instant::now();
                     let resp = client.get(&resource_url).send().await;
                     if let Ok(resp) = resp {
@@ -185,9 +187,10 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                                 }
                             }*/
                             if let Some(cache_info) = cache_info {
-                                let xi_info = XIInfo::parse(&cache_info.to_str().unwrap().to_string());
+                                let xi_info =
+                                    XIInfo::parse(&cache_info.to_str().unwrap().to_string());
                                 if let Some(xi_info) = xi_info {
-                                   info!("x-iinfo: {:#?}", xi_info);
+                                    info!("x-iinfo: {:#?}", xi_info);
                                 }
                             }
                             if let Some(content_type) = content_type {
