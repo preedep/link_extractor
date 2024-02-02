@@ -19,6 +19,7 @@ type QueryString = String;
 type RespCodeAndSize = String;
 type AgentCode = String;
 
+#[derive(Debug)]
 struct XIInfo {
     req_and_resp_id: Option<ReqAndRespID>,
     cache_status: Option<CacheStatus>,
@@ -73,6 +74,8 @@ impl XIInfo {
         Some(xi_info)
     }
     fn is_cache_hit(&self) -> bool {
+        let _cache_status = self.cache_status.as_deref().unwrap();
+
         return true;
     }
 }
@@ -163,6 +166,7 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                             info!("Success: {}", &resource_url);
                             let cache_info = resp.headers().get("x-iinfo");
                             let content_type = resp.headers().get("content-type");
+                            /*
                             if let Some(cache_info) = cache_info {
                                 let cache_status = cache_info.to_str().unwrap().chars().nth(9).unwrap();
                                 match cache_status {
@@ -178,6 +182,12 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                                     _ => {
                                         info!("cache_status: {}", cache_status);
                                     }
+                                }
+                            }*/
+                            if let Some(cache_info) = cache_info {
+                                let xi_info = XIInfo::parse(&cache_info.to_str().unwrap().to_string());
+                                if let Some(xi_info) = xi_info {
+                                   info!("x-iinfo: {:#?}", xi_info);
                                 }
                             }
                             if let Some(content_type) = content_type {
