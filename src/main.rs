@@ -32,51 +32,54 @@ struct XIInfo {
 impl XIInfo {
     fn parse(value: &String) -> Option<XIInfo> {
         let re = Regex::new(r"X-iinfo:\s*(.*)").unwrap();
-        let captures = re.captures(value).unwrap();
-        let x_iinfo_value = captures.get(1).unwrap().as_str();
-        let values: Vec<&str> = x_iinfo_value.split(' ').collect();
-        let mut xi_info = XIInfo {
-            req_and_resp_id: None,
-            cache_status: None,
-            response_time: None,
-            query_string: None,
-            resp_code_and_size: None,
-            agent_code: None,
-        };
-        let mut datas = Vec::new();
-        for (index, value) in values.iter().enumerate() {
-            if index == IDX_REQ_AND_RESP_ID {
-                let req_and_resp_id = value.to_string();
-                xi_info.req_and_resp_id = Some(req_and_resp_id);
-            } else if index == IDX_CACHE_STATUS {
-                let cache_status = value.to_string();
-                xi_info.cache_status = Some(cache_status);
-            } else {
-                let value = value.to_string();
-                if value.eq("RT") {
-                    datas.push(value);
-                } else if value.eq("q") {
-                    xi_info.response_time = Some(datas.join(" "));
-                    datas.clear();
-                    datas.push(value);
-                } else if value.eq("r") {
-                    xi_info.query_string = Some(datas.join(" "));
-                    datas.clear();
-                    datas.push(value);
-                } else if value.starts_with("U") {
-                    xi_info.resp_code_and_size = Some(datas.join(" "));
-                    let agent_code = value;
-                    xi_info.agent_code = Some(agent_code);
+        let captures = re.captures(value);
+        if let Some(captures) = captures {
+            let x_iinfo_value = captures.get(1).unwrap().as_str();
+            let values: Vec<&str> = x_iinfo_value.split(' ').collect();
+            let mut xi_info = XIInfo {
+                req_and_resp_id: None,
+                cache_status: None,
+                response_time: None,
+                query_string: None,
+                resp_code_and_size: None,
+                agent_code: None,
+            };
+            let mut x_iinfo_data_list = Vec::new();
+            for (index, value) in values.iter().enumerate() {
+                if index == IDX_REQ_AND_RESP_ID {
+                    let req_and_resp_id = value.to_string();
+                    xi_info.req_and_resp_id = Some(req_and_resp_id);
+                } else if index == IDX_CACHE_STATUS {
+                    let cache_status = value.to_string();
+                    xi_info.cache_status = Some(cache_status);
                 } else {
-                    datas.push(value);
+                    let value = value.to_string();
+                    if value.eq("RT") {
+                        x_iinfo_data_list.push(value);
+                    } else if value.eq("q") {
+                        xi_info.response_time = Some(x_iinfo_data_list.join(" "));
+                        x_iinfo_data_list.clear();
+                        x_iinfo_data_list.push(value);
+                    } else if value.eq("r") {
+                        xi_info.query_string = Some(x_iinfo_data_list.join(" "));
+                        x_iinfo_data_list.clear();
+                        x_iinfo_data_list.push(value);
+                    } else if value.starts_with("U") {
+                        xi_info.resp_code_and_size = Some(x_iinfo_data_list.join(" "));
+                        let agent_code = value;
+                        xi_info.agent_code = Some(agent_code);
+                    } else {
+                        x_iinfo_data_list.push(value);
+                    }
                 }
             }
+            Some(xi_info)
+        }else {
+            None
         }
-        Some(xi_info)
     }
     fn is_cache_hit(&self) -> bool {
         let _cache_status = self.cache_status.as_deref().unwrap();
-
         return true;
     }
 }
@@ -191,7 +194,7 @@ async fn print_links(url: &String, tag: &String, attr: &String, client: &Client,
                                 let xi_info =
                                     XIInfo::parse(&cache_info.to_str().unwrap().to_string());
                                 if let Some(xi_info) = xi_info {
-                                    info!("x-iinfo: {:#?}", xi_info);
+                                    info!("x-iinfo: cache status {:#?}", xi_info.cache_status.unwrap_or("Unknown".to_string()));
                                 }
                             }
                             if let Some(content_type) = content_type {
