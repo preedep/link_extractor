@@ -54,13 +54,13 @@ impl XIInfo {
                     xi_info.cache_status = Some(cache_status);
                 } else {
                     let value = value.to_string();
-                    if value.eq("RT") {
+                    if value.eq_ignore_ascii_case("RT") || value.starts_with("RT") {
                         x_iinfo_data_list.push(value);
-                    } else if value.eq("q") {
+                    } else if value.eq_ignore_ascii_case("q") || value.starts_with("q") {
                         xi_info.response_time = Some(x_iinfo_data_list.join(" "));
                         x_iinfo_data_list.clear();
                         x_iinfo_data_list.push(value);
-                    } else if value.eq("r") {
+                    } else if value.eq_ignore_ascii_case("r") || value.starts_with("r") {
                         xi_info.query_string = Some(x_iinfo_data_list.join(" "));
                         x_iinfo_data_list.clear();
                         x_iinfo_data_list.push(value);
