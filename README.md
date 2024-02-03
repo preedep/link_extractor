@@ -25,3 +25,6 @@ Output:
 
 ![alt text](./imgs/example.png "Example")
 
+**Note**: In-case if your website uses Incapsula CDN then you got value of header "X-iinfo" 
+
+
