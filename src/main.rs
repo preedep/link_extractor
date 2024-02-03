@@ -13,12 +13,13 @@ use url::Url;
 
 type ReqAndRespID = String;
 type CacheStatus = String;
-
 type ResponseTime = String;
 type QueryString = String;
 type RespCodeAndSize = String;
 type AgentCode = String;
 
+const IDX_REQ_AND_RESP_ID: usize = 0;
+const IDX_CACHE_STATUS: usize = 1;
 #[derive(Debug)]
 struct XIInfo {
     req_and_resp_id: Option<ReqAndRespID>,
@@ -44,10 +45,10 @@ impl XIInfo {
         };
         let mut datas = Vec::new();
         for (index, value) in values.iter().enumerate() {
-            if index == 0 {
+            if index == IDX_REQ_AND_RESP_ID {
                 let req_and_resp_id = value.to_string();
                 xi_info.req_and_resp_id = Some(req_and_resp_id);
-            } else if index == 1 {
+            } else if index == IDX_CACHE_STATUS {
                 let cache_status = value.to_string();
                 xi_info.cache_status = Some(cache_status);
             } else {
