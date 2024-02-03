@@ -21,3 +21,4 @@ Cargo.lock
 /.idea/link_extractor.iml
 /.idea/vcs.xml
 /.idea/modules.xml
+/.idea/aws.xml
